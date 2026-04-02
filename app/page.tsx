@@ -2,100 +2,137 @@
 
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 export default function Home() {
-  const textRef = useRef<any[]>([]);
-  const statsRef = useRef<any[]>([]);
-  const carRef = useRef(null);
+  const heroRef = useRef<HTMLElement | null>(null);
+  const headlineSpansRef = useRef<Array<HTMLSpanElement | null>>([]);
+  const statsRef = useRef<Array<HTMLDivElement | null>>([]);
+  const carWrapRef = useRef<HTMLDivElement | null>(null);
+
   useEffect(() => {
-  // 1. Text animation (keep this)
-  gsap.from(textRef.current, {
-    opacity: 0,
-    y: 50,
-    stagger: 0.05,
-    duration: 1,
-  });
+    gsap.registerPlugin(ScrollTrigger);
 
-  // 2. Stats animation (keep this)
-  gsap.from(statsRef.current, {
-    opacity: 0,
-    y: 30,
-    stagger: 0.2,
-    delay: 0.8,
-  });
+    const prefersReducedMotion =
+      typeof window !== "undefined" &&
+      window.matchMedia &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  // 3. Scroll animation (ADD this)
-  const handleScroll = () => {
-    const scrollY = window.scrollY;
+    if (prefersReducedMotion) return;
 
-    gsap.to(carRef.current, {
-      x: scrollY * 0.5,
-      rotate: scrollY * 0.05,
-      duration: 0.5,
-    });
-  };
+    const ctx = gsap.context(() => {
+      const headlineSpans = headlineSpansRef.current.filter(
+        Boolean
+      ) as HTMLSpanElement[];
+      const stats = statsRef.current.filter(Boolean) as HTMLDivElement[];
 
-  window.addEventListener("scroll", handleScroll);
+      // 1) Headline reveal (fade + slight movement, staggered letters)
+      gsap.set(headlineSpans, { opacity: 0, y: 18, rotateX: -20 });
+      gsap.to(headlineSpans, {
+        opacity: 1,
+        y: 0,
+        rotateX: 0,
+        duration: 0.9,
+        ease: "power3.out",
+        stagger: 0.03,
+      });
 
-  return () => window.removeEventListener("scroll", handleScroll);
-}, []);
+      // 2) Impact stats intro (one by one with subtle delay)
+      gsap.from(stats, {
+        opacity: 0,
+        y: 22,
+        duration: 0.7,
+        ease: "power3.out",
+        stagger: 0.18,
+        delay: 0.35,
+      });
 
-  const text = "WELCOME";
+      // 3) Scroll-driven hero animation (scrubbed, transform-based)
+      gsap.to(carWrapRef.current, {
+        x: "38vw",
+        y: "-10vh",
+        rotate: 18,
+        scale: 1.08,
+        ease: "none",
+        scrollTrigger: {
+          trigger: heroRef.current,
+          start: "top top",
+          end: "bottom top",
+          scrub: 1, // smooth mapping for premium feel
+        },
+      });
+    }, heroRef);
+
+    return () => {
+      ctx.revert();
+      ScrollTrigger.getAll().forEach((t) => t.kill());
+    };
+  }, []);
+
+  const headline = "W E L C O M E I T Z F I Z Z";
+  const stats = [
+    { value: "95%", label: "Performance", desc: "Low-latency interactions" },
+    { value: "120%", label: "Engagement", desc: "Higher attention & dwell" },
+    { value: "80%", label: "Growth", desc: "Stronger conversion signals" },
+  ];
 
   return (
-  <>
-    <main className="h-screen flex flex-col justify-center items-center bg-black text-white relative">
+    <>
+      <main
+        ref={heroRef}
+        className="relative h-screen overflow-hidden bg-black text-white flex flex-col justify-center items-center"
+      >
+        {/* HEADLINE */}
+        <h1 className="text-4xl md:text-6xl font-bold whitespace-pre leading-none">
+          {headline.split("").map((char, i) => (
+            <span
+              key={`${char}-${i}`}
+              ref={(el) => {
+                headlineSpansRef.current[i] = el;
+              }}
+              className="inline-block will-change-transform"
+            >
+              {char}
+            </span>
+          ))}
+        </h1>
 
-      {/* HEADLINE */}
-      <h1 className="text-4xl md:text-6xl font-bold tracking-[0.5em] flex flex-row">
-        {text.split("").map((char, i) => (
-          <span
-            key={i}
-            ref={(el) => {
-  textRef.current[i] = el;
-}}
-            className="inline-block"
-          >
-            {char}
-          </span>
-        ))}
-      </h1>
+        {/* STATS */}
+        <div className="flex flex-wrap justify-center gap-10 mt-10 px-6">
+          {stats.map((item, i) => (
+            <div
+              key={item.value + item.label}
+              ref={(el) => {
+                statsRef.current[i] = el;
+              }}
+              className="text-center w-[180px] md:w-[220px] rounded-2xl border border-white/10 bg-white/5 backdrop-blur px-6 py-5"
+            >
+              <h2 className="text-3xl md:text-4xl font-extrabold">
+                {item.value}
+              </h2>
+              <p className="text-gray-300 mt-1 font-semibold">{item.label}</p>
+              <p className="text-gray-400 text-sm mt-2">{item.desc}</p>
+            </div>
+          ))}
+        </div>
 
-      {/* SUB TEXT */}
-      <p className="mt-4 text-gray-400">ITZ FIZZ</p>
+        {/* CAR (scroll-driven) */}
+        <div
+          ref={carWrapRef}
+          className="absolute bottom-12 left-10 md:left-16 will-change-transform pointer-events-none"
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/car.png"
+            alt="car"
+            className="w-40 md:w-64"
+            draggable={false}
+          />
+        </div>
+      </main>
 
-      {/* STATS */}
-      <div className="flex gap-10 mt-10">
-        {[
-          { value: "95%", label: "Performance" },
-          { value: "120%", label: "Engagement" },
-          { value: "80%", label: "Growth" },
-        ].map((item, i) => (
-          <div
-            key={i}
-            ref={(el) => {
-  statsRef.current[i] = el;
-}}
-            className="text-center"
-          >
-            <h2 className="text-2xl font-bold">{item.value}</h2>
-            <p className="text-gray-400">{item.label}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* CAR */}
-     <img
-  ref={carRef}
-  src="https://cdn.pixabay.com/photo/2012/05/29/00/43/car-49278_1280.png"
-  alt="car"
-  className="absolute bottom-10 left-0 w-40 md:w-64"
-/>
-
-    </main>
-
-    {/* 👇 ADD THIS FOR SCROLL */}
-    <section className="h-[200vh] bg-gray-900"></section>
-  </>
-);
+      {/* Extra scroll space to demonstrate the scrubbed animation */}
+      <section className="h-[200vh] bg-gray-900" />
+    </>
+  );
 }
