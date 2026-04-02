@@ -51,7 +51,9 @@ export default function Home() {
         {text.split("").map((char, i) => (
           <span
             key={i}
-            ref={(el) => (textRef.current[i] = el)}
+            ref={(el) => {
+  textRef.current[i] = el;
+}}
             className="inline-block"
           >
             {char}
@@ -71,7 +73,9 @@ export default function Home() {
         ].map((item, i) => (
           <div
             key={i}
-            ref={(el) => (statsRef.current[i] = el)}
+            ref={(el) => {
+  statsRef.current[i] = el;
+}}
             className="text-center"
           >
             <h2 className="text-2xl font-bold">{item.value}</h2>
@@ -81,7 +85,7 @@ export default function Home() {
       </div>
 
       {/* CAR */}
-      <img
+     <img
   ref={carRef}
   src="https://cdn.pixabay.com/photo/2012/05/29/00/43/car-49278_1280.png"
   alt="car"
