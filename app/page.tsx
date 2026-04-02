@@ -13,126 +13,106 @@ export default function Home() {
   useEffect(() => {
     gsap.registerPlugin(ScrollTrigger);
 
-    const prefersReducedMotion =
-      typeof window !== "undefined" &&
-      window.matchMedia &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-    if (prefersReducedMotion) return;
-
     const ctx = gsap.context(() => {
       const headlineSpans = headlineSpansRef.current.filter(
         Boolean
       ) as HTMLSpanElement[];
-      const stats = statsRef.current.filter(Boolean) as HTMLDivElement[];
 
-      // 1) Headline reveal (fade + slight movement, staggered letters)
-      gsap.set(headlineSpans, { opacity: 0, y: 18, rotateX: -20 });
+      const stats = statsRef.current.filter(
+        Boolean
+      ) as HTMLDivElement[];
+      gsap.set(headlineSpans, { opacity: 0, y: 20 });
       gsap.to(headlineSpans, {
         opacity: 1,
         y: 0,
-        rotateX: 0,
-        duration: 0.9,
+        stagger: 0.04,
+        duration: 1,
         ease: "power3.out",
-        stagger: 0.03,
       });
 
-      // 2) Impact stats intro (one by one with subtle delay)
       gsap.from(stats, {
         opacity: 0,
-        y: 22,
-        duration: 0.7,
-        ease: "power3.out",
-        stagger: 0.18,
-        delay: 0.35,
+        y: 30,
+        stagger: 0.2,
+        delay: 0.5,
+        duration: 0.8,
       });
 
-      // 3) Scroll-driven hero animation (scrubbed, transform-based)
       gsap.to(carWrapRef.current, {
-        x: "38vw",
+        x: "40vw",
         y: "-10vh",
-        rotate: 18,
-        scale: 1.08,
+        rotate: 8,
+        scale: 1.05,
         ease: "none",
         scrollTrigger: {
           trigger: heroRef.current,
           start: "top top",
           end: "bottom top",
-          scrub: 1, // smooth mapping for premium feel
+          scrub: 1,
         },
       });
     }, heroRef);
 
-    return () => {
-      ctx.revert();
-      ScrollTrigger.getAll().forEach((t) => t.kill());
-    };
+    return () => ctx.revert();
   }, []);
 
-  const headline = "W E L C O M E I T Z F I Z Z";
-  const stats = [
-    { value: "95%", label: "Performance", desc: "Low-latency interactions" },
-    { value: "120%", label: "Engagement", desc: "Higher attention & dwell" },
-    { value: "80%", label: "Growth", desc: "Stronger conversion signals" },
-  ];
+  const text = "WELCOME ITZ FIZZ";
 
   return (
     <>
       <main
         ref={heroRef}
-        className="relative h-screen overflow-hidden bg-black text-white flex flex-col justify-center items-center"
+        className="relative h-screen flex flex-col justify-center items-center bg-black text-white overflow-hidden"
       >
         {/* HEADLINE */}
-        <h1 className="text-4xl md:text-6xl font-bold whitespace-pre leading-none">
-          {headline.split("").map((char, i) => (
+        <h1 className="text-4xl md:text-6xl font-bold tracking-[0.5em] text-center flex flex-wrap justify-center">
+          {text.split("").map((char, i) => (
             <span
-              key={`${char}-${i}`}
+              key={i}
               ref={(el) => {
                 headlineSpansRef.current[i] = el;
               }}
-              className="inline-block will-change-transform"
+              className="inline-block"
             >
-              {char}
+              {char === " " ? "\u00A0" : char}
             </span>
           ))}
         </h1>
 
         {/* STATS */}
-        <div className="flex flex-wrap justify-center gap-10 mt-10 px-6">
-          {stats.map((item, i) => (
+        <div className="flex gap-10 mt-10">
+          {[
+            { value: "95%", label: "Performance" },
+            { value: "120%", label: "Engagement" },
+            { value: "80%", label: "Growth" },
+          ].map((item, i) => (
             <div
-              key={item.value + item.label}
+              key={i}
               ref={(el) => {
                 statsRef.current[i] = el;
               }}
-              className="text-center w-[180px] md:w-[220px] rounded-2xl border border-white/10 bg-white/5 backdrop-blur px-6 py-5"
+              className="text-center px-6 py-4 rounded-xl border border-white/10 bg-white/5"
             >
-              <h2 className="text-3xl md:text-4xl font-extrabold">
-                {item.value}
-              </h2>
-              <p className="text-gray-300 mt-1 font-semibold">{item.label}</p>
-              <p className="text-gray-400 text-sm mt-2">{item.desc}</p>
+              <h2 className="text-2xl font-bold">{item.value}</h2>
+              <p className="text-gray-400">{item.label}</p>
             </div>
           ))}
         </div>
 
-        {/* CAR (scroll-driven) */}
+        {/* CAR */}
         <div
           ref={carWrapRef}
-          className="absolute bottom-12 left-10 md:left-16 will-change-transform pointer-events-none"
+          className="absolute bottom-16 left-10"
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/car.png"
+            src="/car.png" 
             alt="car"
             className="w-40 md:w-64"
             draggable={false}
           />
         </div>
       </main>
-
-      {/* Extra scroll space to demonstrate the scrubbed animation */}
-      <section className="h-[200vh] bg-gray-900" />
+      <section className="h-[200vh] bg-gray-900"></section>
     </>
   );
 }
